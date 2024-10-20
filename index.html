@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블랙잭 게임</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #FFD1DC;
+            color: #4A0E1C;
+        }
+        #game {
+            text-align: center;
+            background-color: #FFF0F5;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #FF69B4;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        #ai-cards, #player-cards {
+            margin: 20px 0;
+        }
+        #ai-cards {
+            background-color: #FFB6C1; /* AI 카드 배경색 */
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #player-cards {
+            background-color: #B0E0E6; /* 플레이어 카드 배경색 */
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .card {
+            display: inline-block;
+            width: 60px;
+            height: 90px;
+            background-color: white;
+            color: #4A0E1C;
+            text-align: center;
+            line-height: 90px;
+            margin: 0 5px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        button {
+            margin: 10px;
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #FF69B4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            font-family: inherit;
+        }
+        button:hover {
+            background-color: #FF1493;
+        }
+        #message {
+            font-size: 24px;
+            margin-top: 20px;
+            font-weight: 500;
+            color: #C71585;
+        }
+        #rules {
+            display: none;
+            background-color: rgba(255, 192, 203, 0.8);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+        }
+        #rules-content {
+            background-color: #FFF0F5;
+            color: #4A0E1C;
+            padding: 20px;
+            border-radius: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        #close-rules {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #FF69B4;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>블랙잭</h1>
+        <div id="ai-cards"></div>
+        <div id="player-cards"></div>
+        <div id="buttons">
+            <button id="hit">카드 추가</button>
+            <button id="stand">카드 유지</button>
+            <button id="show-rules">게임 설명</button>
+            <button id="restart" style="display:none;">게임 재시작</button>
+        </div>
+        <div id="message">시작하려면 스페이스바를 누르세요</div>
+    </div>
+
+    <div id="rules">
+        <div id="rules-content">
+            <h2>블랙잭 게임 설명</h2>
+            <ol>
+            <li>당신의 카드는 하늘색 박스안에 있습니다.</li>
+            <li>AI의 카드는 분홍색 박스 안에 있습니다.</li>
+            <li>게임의 목표는 카드의 합계가 21에 가까워지되, 21을 초과하지 않는 것 입니다.</li>
+            <li>A는 1 또는 11로 계산되며, J, Q, K는 10으로 계산됩니다.</li>
+            <li>플레이어와 AI는 각각 2장의 카드로 시작합니다.</li>
+            <li>플레이어는 추가 카드를 받거나, 현재 상태를 유지할 수 있습니다.</li>
+            <li>카드 합계가 21을 초과하면 즉시 패배합니다.</li>
+            <li>AI는 카드 합계가 17 이상이 될 때까지 카드를 뽑습니다.</li>
+            <li>다시 시작하려면 재시작 버튼을 누른 후 스페이스바를 누르세요.</li>
+            </ol>
+            <span id="close-rules">&times;</span>
+        </div>
+    </div>
+
+    <script>
+        const deck = [];
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        let aiCards = [];
+        let playerCards = [];
+        let gameOver = true;
+
+        const aiCardsElement = document.getElementById('ai-cards');
+        const playerCardsElement = document.getElementById('player-cards');
+        const hitButton = document.getElementById('hit');
+        const standButton = document.getElementById('stand');
+        const restartButton = document.getElementById('restart');
+        const messageElement = document.getElementById('message');
+        const showRulesButton = document.getElementById('show-rules');
+        const rulesElement = document.getElementById('rules');
+        const closeRulesButton = document.getElementById('close-rules');
+
+        function createDeck() {
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ suit, value });
+                }
+            }
+        }
+
+        function shuffleDeck() {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function dealCard() {
+            return deck.pop();
+        }
+
+        function calculateHandValue(hand) {
+            let value = 0;
+            let hasAce = false;
+            for (let card of hand) {
+                if (card.value === 'A') {
+                    hasAce = true;
+                }
+                value += cardValue(card);
+            }
+            if (hasAce && value + 10 <= 21) {
+                value += 10;
+            }
+            return value;
+        }
+
+        function cardValue(card) {
+            if (['J', 'Q', 'K'].includes(card.value)) return 10;
+            if (card.value === 'A') return 1;
+            return parseInt(card.value);
+        }
+
+        function updateCardDisplay() {
+            aiCardsElement.innerHTML = aiCards.map(card => `<div class="card" style="color: ${card.suit === '♥' || card.suit === '♦' ? '#4A0E1C' : '#4A0E1C'}">${card.value}${card.suit}</div>`).join('');
+            playerCardsElement.innerHTML = playerCards.map(card => `<div class="card" style="color: ${card.suit === '♥' || card.suit === '♦' ? '#4A0E1C' : '#4A0E1C'}">${card.value}${card.suit}</div>`).join('');
+        }
+
+        function startGame() {
+            deck.length = 0;
+            createDeck();
+            shuffleDeck();
+            aiCards = [dealCard(), dealCard()];
+            playerCards = [dealCard(), dealCard()];
+            gameOver = false;
+            restartButton.style.display = 'none'; // Hide the restart button
+            updateCardDisplay();
+            checkBlackjack();
+        }
+
+        function hit() {
+            if (gameOver) return;
+            playerCards.push(dealCard());
+            updateCardDisplay();
+            if (calculateHandValue(playerCards) > 21) {
+                endGame("버스트! AI가 이겼습니다.");
+            }
+        }
+
+        function stand() {
+            if (gameOver) return;
+            while (calculateHandValue(aiCards) < 17) {
+                aiCards.push(dealCard());
+            }
+            updateCardDisplay();
+            const playerValue = calculateHandValue(playerCards);
+            const aiValue = calculateHandValue(aiCards);
+            if (aiValue > 21) {
+                endGame("AI 버스트! 당신이 이겼습니다!");
+            } else if (playerValue > aiValue) {
+                endGame("당신이 이겼습니다!");
+            } else if (playerValue < aiValue) {
+                endGame("AI가 이겼습니다!");
+            } else {
+                endGame("무승부입니다!");
+            }
+        }
+
+        function checkBlackjack() {
+            const playerValue = calculateHandValue(playerCards);
+            const aiValue = calculateHandValue(aiCards);
+            if (playerValue === 21 && aiValue === 21) {
+                endGame("양쪽 모두 블랙잭! 무승부입니다!");
+            } else if (playerValue === 21) {
+                endGame("블랙잭! 당신이 이겼습니다!");
+            } else if (aiValue === 21) {
+                endGame("AI 블랙잭! AI가 이겼습니다!");
+            }
+        }
+
+        function endGame(message) {
+            gameOver = true;
+            messageElement.textContent = message + " 게임을 다시 시작하려면 아래 버튼을 클릭하세요.";
+            restartButton.style.display = 'block'; // Show the restart button
+        }
+
+        hitButton.addEventListener('click', hit);
+        standButton.addEventListener('click', stand);
+        restartButton.addEventListener('click', startGame); // Add click event for restart button
+
+        showRulesButton.addEventListener('click', function() {
+            rulesElement.style.display = 'block';
+        });
+
+        closeRulesButton.addEventListener('click', function() {
+            rulesElement.style.display = 'none';
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                startGame();
+                messageElement.textContent = "게임이 시작되었습니다. 카드를 추가하거나 유지하세요.";
+            }
+        });
+    </script>
+</body>
+</html>
