@@ -1,0 +1,28 @@
+name: OpenAI Chatbot
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_message:
+        description: 'User input message'
+        required: true
+
+jobs:
+  call_openai:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Call OpenAI API
+      run: |
+        response=$(curl https://api.openai.com/v1/chat/completions \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+          -d '{
+          "model": "gpt-3.5-turbo",
+          "messages": [{"role": "user", "content": "${{ github.event.inputs.user_message }}"}]
+        }')
+
+        echo "OpenAI Response: $response"
