@@ -3,61 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>챗봇</title>
+    <title>CHAT BOT</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap'); /* 폰트 추가 */
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Jua', sans-serif; /* 한글 폰트 적용 */
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding: 0;
+            background-color: #ffe6f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         #chat-container {
+            width: 100%;
             max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #ff99cc;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        #header {
+            background-color: #ffadd2;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
         }
         #messages {
-            height: 300px;
+            height: 350px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 15px;
+            background-color: #fff0f5;
+            border-bottom: 2px solid #ffadd2;
         }
         .message {
-            margin: 5px 0;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #333;
         }
         .user {
-            color: blue;
+            background-color: #ffb0df;
+            text-align: right;
         }
         .bot {
-            color: green;
+            background-color: #ffe6f2;
+            text-align: left;
         }
-        #user-input, #api-key {
-            width: calc(100% - 100px);
+        #input-area {
+            display: flex;
+            background-color: #ffccec;
+            padding: 15px;
+            border-top: 2px solid #ffadd2;
+        }
+        #api-key, #user-input {
+            flex: 1;
+            margin-right: 10px;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 2px solid #ffadd2;
             border-radius: 5px;
-            margin-bottom: 10px;
+            font-size: 14px;
         }
         #send-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #5cb85c;
+            background-color: #ffadd2;
             color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #send-button:hover {
+            background-color: #cc0088;
         }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <input type="text" id="api-key" placeholder="API 키를 입력하세요" />
+        <div id="header">CHAT BOT</div>
         <div id="messages"></div>
-        <input type="text" id="user-input" placeholder="메시지를 입력하세요..." />
-        <button id="send-button">전송</button>
+        <div id="input-area">
+            <input type="text" id="api-key" placeholder="API 키를 입력하세요" />
+            <input type="text" id="user-input" placeholder="메시지를 입력하세요..." />
+            <button id="send-button">전송</button>
+        </div>
     </div>
 
     <script>
